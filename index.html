@@ -405,6 +405,16 @@ const ciudadesCoords = {
   'Medellín': [6.2442, -75.5812], 'Armenia': [4.5388, -75.6725], 'Manizales': [5.0688, -75.5173]
 };
 
+function normalizarCategoria(texto) {
+    if (!texto) return "Otro";
+    let t = String(texto).toLowerCase().trim();
+    if (t.includes("whatsapp")) return "WhatsApp";
+    if (t.includes("directa")) return "Venta Directa";
+    if (t.includes("molido")) return "Molido";
+    if (t.includes("grano")) return "Grano";
+    return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
 // Interceptor JSONP infalible (Salta bloqueos CORS locales)
 window.google = {
    visualization: {
@@ -444,9 +454,9 @@ window.google = {
                     frecuencia: c[5] ? parseInt(c[5].v) : 1,
                     ultimaCompra: fechaLabel,
                     recencia: recenciaCalculada,
-                    canal: c[7] ? c[7].v : "Web",
-                    tipo: c[8] ? c[8].v : "Molido",
-                    presentacion: c[9] ? c[9].v : "Caja",
+                    canal: normalizarCategoria(c[7] ? c[7].v : "Web"),
+                    tipo: normalizarCategoria(c[8] ? c[8].v : "Molido"),
+                    presentacion: normalizarCategoria(c[9] ? c[9].v : "Caja"),
                     unidades: c[10] ? parseInt(c[10].v) : 1,
                     valor: parseInt(valorBruto) || 0
                   };
@@ -499,9 +509,9 @@ window.addEventListener("message", function(event) {
       frecuencia: 1, 
       ultimaCompra: `${fechaSubmit.getDate()}/${fechaSubmit.getMonth()+1}/${fechaSubmit.getFullYear()}`,
       recencia: 0,
-      canal: doc["canal"] || "HubSpot Live",
-      tipo: doc["tipo_cafe"] || doc["tipo"] || "Molido",
-      presentacion: doc["presentacion"] || "Libra",
+      canal: normalizarCategoria(doc["canal"] || "HubSpot Live"),
+      tipo: normalizarCategoria(doc["tipo_cafe"] || doc["tipo"] || "Molido"),
+      presentacion: normalizarCategoria(doc["presentacion"] || "Libra"),
       unidades: parseInt(doc["unidades"] || "1", 10),
       valor: parseInt(doc["valor"] || doc["monto"] || "40000", 10)
     };
