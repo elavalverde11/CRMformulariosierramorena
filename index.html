@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif:ital,wght@0,400;0,700;1,400&family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        colors: {
+          "outline-variant": "#c2c8c0",
+          "primary": "#17301e",
+          "inverse-on-surface": "#f3f2db",
+          "tertiary-fixed-dim": "#f5bd55",
+          "on-primary-fixed": "#06200f",
+          "surface-container": "#f0efd9",
+          "on-primary-fixed-variant": "#324d38",
+          "primary-container": "#2d4733",
+          "on-surface-variant": "#424842",
+          "inverse-surface": "#313123",
+          "tertiary-container": "#573c00",
+          "error": "#ba1a1a",
+          "secondary-fixed-dim": "#ffb4a5",
+          "on-surface": "#1c1c0f",
+          "on-tertiary-container": "#d9a43f",
+          "outline": "#737972",
+          "secondary-fixed": "#ffdad3",
+          "on-tertiary": "#ffffff",
+          "surface-container-lowest": "#ffffff",
+          "surface-tint": "#4a654f",
+          "primary-fixed": "#cceacf",
+          "inverse-primary": "#b0ceb3",
+          "surface-variant": "#e5e4ce",
+          "on-secondary-fixed": "#3e0400",
+          "surface-dim": "#dcdbc5",
+          "surface-container-highest": "#e5e4ce",
+          "secondary": "#b5270e",
+          "tertiary": "#3b2700",
+          "on-tertiary-fixed": "#271900",
+          "error-container": "#ffdad6",
+          "on-primary-container": "#97b59b",
+          "on-error": "#ffffff",
+          "surface-container-low": "#f6f5de",
+          "on-secondary": "#ffffff",
+          "primary-fixed-dim": "#b0ceb3",
+          "on-secondary-fixed-variant": "#8e1300",
+          "on-tertiary-fixed-variant": "#5f4100",
+          "surface": "#fcfae4",
+          "on-primary": "#ffffff",
+          "on-error-container": "#93000a",
+          "tertiary-fixed": "#ffdea9",
+          "background": "#fcfae4",
+          "on-background": "#1c1c0f",
+          "on-secondary-container": "#5d0900",
+          "surface-container-high": "#ebe9d3",
+          "secondary-container": "#ff5c3e",
+          "surface-bright": "#fcfae4"
+        },
+        fontFamily: {
+          "headline": ["Noto Serif"],
+          "body": ["Manrope"],
+          "label": ["Manrope"]
+        },
+        borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+      },
+    },
+  }
+</script>
+<style>
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  }
+  body {
+    background-color: #fcfae4;
+    color: #1c1c0f;
+    font-family: 'Manrope', sans-serif;
+  }
+  .serif-text { font-family: 'Noto Serif', serif; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  #map { z-index: 1; }
+  .insight-box {
+    background: rgba(255,222,169,0.25);
+    border-left: 3px solid #f5bd55;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    margin-top: 1rem;
+    font-size: 0.72rem;
+    color: #424842;
+    line-height: 1.6;
+  }
+  .insight-box b { color: #17301e; }
+</style>
+</head>
+<body class="flex min-h-screen">
+
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-full flex flex-col py-8 bg-[#f6f5de] text-[#17301e] font-sans text-sm uppercase tracking-widest w-64 border-r-0 z-50">
+  <div class="px-6 mb-10 flex items-center gap-3">
+    <img alt="Sierra Morena Logo" class="w-10 h-10 object-contain" src="logo.png"/>
+    <div class="flex flex-col">
+      <span class="font-serif text-xl text-[#17301e] normal-case tracking-normal">Sierra Morena</span>
+      <span class="text-[10px] opacity-60">Premium CRM</span>
+    </div>
+  </div>
+  <nav class="flex-1 flex flex-col gap-1 px-4">
+    <a class="bg-[#e5e4ce] text-[#17301e] font-semibold rounded-r-full flex items-center gap-4 px-4 py-3 transition-all duration-200 ease-in-out" href="#">
+      <span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+      <span>Inicio</span>
+    </a>
+    <a class="text-[#17301e]/60 hover:bg-[#e5e4ce]/50 flex items-center gap-4 px-4 py-3 rounded-r-full transition-all duration-200 ease-in-out" href="#">
+      <span class="material-symbols-outlined" data-icon="groups">groups</span>
+      <span>Gestión de Clientes</span>
+    </a>
+    <a class="text-[#17301e]/60 hover:bg-[#e5e4ce]/50 flex items-center gap-4 px-4 py-3 rounded-r-full transition-all duration-200 ease-in-out" href="#">
+      <span class="material-symbols-outlined" data-icon="coffee">coffee</span>
+      <span>Inventario de Grano</span>
+    </a>
+    <a class="text-[#17301e]/60 hover:bg-[#e5e4ce]/50 flex items-center gap-4 px-4 py-3 rounded-r-full transition-all duration-200 ease-in-out" href="#">
+      <span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+      <span>Reportes de Cosecha</span>
+    </a>
+    <a class="text-[#17301e]/60 hover:bg-[#e5e4ce]/50 flex items-center gap-4 px-4 py-3 rounded-r-full transition-all duration-200 ease-in-out" href="#">
+      <span class="material-symbols-outlined" data-icon="settings">settings</span>
+      <span>Ajustes de Finca</span>
+    </a>
+  </nav>
+  <div class="px-6 mt-auto">
+    <button onclick="document.getElementById('hubspot-modal').classList.remove('hidden')" class="w-full bg-[#b5270e] text-white py-4 rounded-xl flex items-center justify-center gap-2 hover:brightness-110 transition-all font-bold tracking-normal normal-case">
+      <span class="material-symbols-outlined" data-icon="sync">sync</span>
+      Actualiza el CRM
+    </button>
+  </div>
+</aside>
+
+<!-- Main Content Canvas -->
+<main class="flex-1 ml-64 p-12 overflow-x-hidden">
+
+  <!-- Header Section -->
+  <header class="flex justify-between items-end mb-12">
+    <div>
+      <h1 class="font-headline text-4xl text-primary font-bold tracking-tight mb-2">Tablero de Control</h1>
+      <p class="text-on-surface-variant font-body">Bienvenido a la Finca Digital. Aquí el resumen de tu operación cafetera.</p>
+    </div>
+    <div class="flex gap-4">
+      <div class="bg-surface-container-highest px-6 py-3 rounded-lg flex items-center gap-3">
+        <span class="material-symbols-outlined text-primary" data-icon="cloud_sync">cloud_sync</span>
+        <span class="font-label text-xs font-bold uppercase tracking-widest" id="fecha-header">Actualizado Hoy</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Top KPIs -->
+  <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-12">
+    <!-- Total Clientes -->
+    <div class="bg-surface-container-low p-8 rounded-xl flex flex-col justify-between">
+      <div class="flex justify-between items-start mb-4">
+        <span class="material-symbols-outlined text-primary text-3xl" data-icon="person_search">person_search</span>
+      </div>
+      <div>
+        <span class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Total de Clientes</span>
+        <h2 class="font-headline text-3xl text-primary font-bold" id="kpi-clientes">—</h2>
+      </div>
+    </div>
+    <!-- Ingresos Totales -->
+    <div class="bg-primary text-white p-8 rounded-xl flex flex-col justify-between md:col-span-2">
+      <div class="flex justify-between items-start mb-4">
+        <span class="material-symbols-outlined text-tertiary-fixed text-4xl" data-icon="payments">payments</span>
+      </div>
+      <div>
+        <span class="font-label text-[10px] uppercase tracking-widest text-on-primary-container">Ingresos Totales (COP)</span>
+        <h2 class="font-headline text-4xl font-bold" id="kpi-ingresos">—</h2>
+        <p class="text-xs text-on-primary-container mt-2">Suma de valor monetario de todos los clientes</p>
+      </div>
+    </div>
+    <!-- Ticket Promedio -->
+    <div class="bg-surface-container-low p-8 rounded-xl flex flex-col justify-between">
+      <div class="mb-4">
+        <span class="material-symbols-outlined text-secondary text-3xl" data-icon="receipt_long">receipt_long</span>
+      </div>
+      <div>
+        <span class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Ticket Promedio</span>
+        <h2 class="font-headline text-3xl text-primary font-bold" id="kpi-ticket">—</h2>
+      </div>
+    </div>
+    <!-- Frecuencia & Recencia -->
+    <div class="bg-surface-container-highest p-8 rounded-xl flex flex-col justify-center gap-6">
+      <div>
+        <span class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Frecuencia Prom.</span>
+        <div class="flex items-end gap-2">
+          <h2 class="font-headline text-2xl text-primary font-bold" id="kpi-frecuencia">—</h2>
+          <span class="text-xs text-on-surface-variant pb-1">compras/cliente</span>
+        </div>
+      </div>
+      <div class="h-[1px] bg-outline-variant opacity-20"></div>
+      <div>
+        <span class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant">Recencia Prom.</span>
+        <div class="flex items-end gap-2">
+          <h2 class="font-headline text-2xl text-primary font-bold" id="kpi-recencia">—</h2>
+          <span class="text-xs text-on-surface-variant pb-1">días</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Segmentation Row -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+    <!-- Estado de la Base -->
+    <div class="bg-surface p-8 rounded-xl border border-outline-variant border-opacity-10 col-span-1">
+      <h3 class="font-headline text-xl font-bold mb-8 text-primary">Estado de la Base</h3>
+      <div class="space-y-6">
+        <div class="p-6 bg-error-container rounded-xl flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-error flex items-center justify-center text-white">
+              <span class="material-symbols-outlined" data-icon="warning">warning</span>
+            </div>
+            <div>
+              <p class="font-bold text-primary">En Riesgo</p>
+              <p class="text-xs opacity-70">Recencia &gt; 30 días</p>
+            </div>
+          </div>
+          <p class="font-headline text-2xl font-bold text-error" id="kpi-riesgo">—</p>
+        </div>
+        <div class="p-6 bg-primary-fixed rounded-xl flex items-center justify-between">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center text-white">
+              <span class="material-symbols-outlined" data-icon="star">star</span>
+            </div>
+            <div>
+              <p class="font-bold text-primary">Punto Ideal</p>
+              <p class="text-xs opacity-70">Recencia &lt; 15 y Frec. &gt; 2</p>
+            </div>
+          </div>
+          <p class="font-headline text-2xl font-bold text-primary" id="kpi-ideal">—</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Clientes Única Compra -->
+    <div class="bg-surface-container-highest p-8 rounded-xl relative overflow-hidden group">
+      <div class="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform duration-500">
+        <span class="material-symbols-outlined text-[160px]" data-icon="person_add">person_add</span>
+      </div>
+      <h3 class="font-headline text-lg font-bold mb-4">Retención Crítica</h3>
+      <p class="text-sm text-on-surface-variant mb-6">Clientes con una sola compra registrada.</p>
+      <div class="flex items-baseline gap-2">
+        <span class="font-headline text-5xl font-bold text-primary" id="kpi-unica">—</span>
+        <span class="text-secondary font-bold text-sm" id="kpi-unica-pct"></span>
+      </div>
+      <button class="mt-8 text-primary font-bold text-sm flex items-center gap-2 hover:underline">
+        Lanzar Campaña de Re-compra
+        <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+      </button>
+    </div>
+
+    <!-- Insight del Mes -->
+    <div class="bg-tertiary-fixed/30 p-8 rounded-xl flex flex-col justify-center">
+      <span class="material-symbols-outlined text-tertiary text-4xl mb-4" data-icon="lightbulb">lightbulb</span>
+      <h4 class="font-headline text-xl font-bold text-primary mb-2">Insight del Mes</h4>
+      <p class="text-on-surface-variant" id="insight-mes">Calculando...</p>
+    </div>
+  </div>
+
+  <!-- Canal de Venta & Top Clientes Row -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12 items-stretch">
+    <!-- Canal de Venta -->
+    <div class="lg:col-span-4 bg-surface p-8 rounded-xl border border-outline-variant border-opacity-10 flex flex-col">
+      <h3 class="font-headline text-xl font-bold text-primary mb-4">Canal de Venta</h3>
+      <div class="flex-1 min-h-[220px]">
+        <canvas id="chartCanal"></canvas>
+      </div>
+    </div>
+
+    <!-- Top Clientes Table -->
+    <div class="lg:col-span-8 bg-surface p-8 rounded-xl border border-outline-variant border-opacity-10 flex flex-col">
+      <div class="flex justify-between items-center mb-8">
+        <h3 class="font-headline text-xl font-bold text-primary">Base Completa (CRM)</h3>
+        <a class="text-primary text-xs font-bold uppercase tracking-widest hover:opacity-70 transition-opacity" href="#">Ver Todos</a>
+      </div>
+      <div class="overflow-x-auto flex-1 max-h-[300px] overflow-y-auto no-scrollbar">
+        <table class="w-full text-left">
+          <thead class="sticky top-0 bg-surface">
+            <tr class="font-label text-[10px] text-on-surface-variant border-b border-outline-variant/10 uppercase tracking-widest">
+              <th class="pb-4 font-bold">Cliente</th>
+              <th class="pb-4 font-bold">Frecuencia</th>
+              <th class="pb-4 font-bold">Última Compra</th>
+              <th class="pb-4 font-bold text-right">Valor Total</th>
+            </tr>
+          </thead>
+          <tbody class="text-sm" id="tabla-top"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Distribution & Lifecycle Row -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12 items-stretch">
+    <!-- Ticket por Producto -->
+    <div class="lg:col-span-4 bg-surface-container-low p-8 rounded-xl flex flex-col">
+      <h3 class="font-headline text-lg font-bold mb-4 flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary" data-icon="inventory_2">inventory_2</span>
+        Ticket por Producto
+      </h3>
+      <div class="flex-1 min-h-[220px]">
+        <canvas id="chartTicket"></canvas>
+      </div>
+      <div class="insight-box" id="insight-ticket"></div>
+    </div>
+
+    <!-- Ciclo de Vida Chart -->
+    <div class="lg:col-span-8 bg-white p-8 rounded-xl shadow-sm border border-outline-variant/5 flex flex-col">
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <h3 class="font-headline text-xl font-bold text-primary">Ciclo de Vida</h3>
+          <p class="text-[10px] text-on-surface-variant uppercase tracking-widest font-label">Frecuencia vs Recencia</p>
+        </div>
+        <div class="flex gap-4">
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 rounded-full bg-[#16a34a]"></div>
+            <span class="text-[10px] font-medium uppercase tracking-widest">Activo</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <div class="w-3 h-3 rounded-full bg-[#ba1a1a]"></div>
+            <span class="text-[10px] font-medium uppercase tracking-widest">En Riesgo</span>
+          </div>
+        </div>
+      </div>
+      <div class="flex-1 min-h-[260px]">
+        <canvas id="chartCiclo"></canvas>
+      </div>
+      <div class="insight-box" id="insight-ciclo"></div>
+    </div>
+  </div>
+
+  <!-- Geo Analysis Section -->
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-12">
+    <div class="lg:col-span-8 bg-surface-container-low rounded-2xl overflow-hidden relative" style="min-height:500px;">
+      <div class="absolute top-8 left-8 z-10">
+        <h3 class="font-headline text-2xl font-bold text-primary">Distribución Geográfica</h3>
+        <p class="text-sm text-on-surface-variant">Principales focos de consumo nacional</p>
+      </div>
+      <div id="map" style="width:100%;height:500px;border-radius:1rem;"></div>
+    </div>
+
+    <div class="lg:col-span-4 flex flex-col gap-6">
+      <div class="bg-surface p-8 rounded-xl border border-outline-variant border-opacity-10 flex-1">
+        <h4 class="font-label text-[10px] uppercase tracking-widest text-on-surface-variant mb-6">Detalle por Ciudad</h4>
+        <div class="space-y-8" id="detalle-ciudad"></div>
+        <div class="mt-8 p-6 bg-tertiary-fixed/30 rounded-xl">
+          <span class="material-symbols-outlined text-tertiary text-3xl mb-4" data-icon="explore">explore</span>
+          <h5 class="font-bold text-primary mb-2">Oportunidad de Expansión</h5>
+          <p class="text-xs text-on-surface-variant leading-relaxed" id="insight-expansion">Calculando...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- HubSpot Modal (ESCONDIDO POR DEFECTO) -->
+<div id="hubspot-modal" class="fixed inset-0 bg-black/60 z-[100] hidden flex items-center justify-center backdrop-blur-sm transition-opacity">
+  <div class="bg-surface p-8 rounded-2xl w-full max-w-lg relative shadow-2xl max-h-[90vh] overflow-y-auto no-scrollbar">
+    <button onclick="document.getElementById('hubspot-modal').classList.add('hidden')" class="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-surface-container-highest rounded-full text-on-surface-variant hover:bg-outline-variant hover:text-primary transition-colors">
+      <span class="material-symbols-outlined text-sm">close</span>
+    </button>
+    <h3 class="font-headline text-2xl font-bold text-primary mb-2">Ingresar Nuevo Pedido</h3>
+    <p class="text-sm text-on-surface-variant mb-6">Complete la información en el CRM a través del siguiente formulario oficial.</p>
+    
+    <!-- Contenedor del Formulario HubSpot -->
+    <script src="https://js.hsforms.net/forms/embed/51270653.js" defer></script>
+    <div class="hs-form-frame" data-region="na1" data-form-id="5799b8d7-f78a-44f3-98c9-18f09574f818" data-portal-id="51270653"></div>
+  </div>
+</div>
+
+<script>
+// Enlace API universal de Google Sheets (gviz)
+const GOOGLE_SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/1HH04AtdkOxacbFX8aH5AUS_Ah8y26BtvliN1B_IT-LA/gviz/tq?tqx=out:csv"; 
+
+// Base de Datos Central
+let clientes = [];
+
+let chartCanalInstance = null;
+let chartTicketInstance = null;
+let chartCicloInstance = null;
+let mapInstance = null;
+let circleLayers = [];
+
+const ciudadesCoords = {
+  'Cali': [3.4516, -76.5320], 'Pereira': [4.8133, -75.6961], 'Bogotá': [4.7110, -74.0721],
+  'Medellín': [6.2442, -75.5812], 'Armenia': [4.5388, -75.6725], 'Manizales': [5.0688, -75.5173]
+};
+
+// Interceptor JSONP infalible (Salta bloqueos CORS locales)
+window.google = {
+   visualization: {
+      Query: {
+         setResponse: function(data) {
+            const rows = data.table.rows;
+            const datosLimpios = rows.map(r => r.c).filter(c => c && c[0] && c[0].v);
+            
+            if (datosLimpios.length > 0) {
+                clientes = datosLimpios.map((c, index) => {
+                  let recenciaCalculada = 0;
+                  let fechaLabel = "Reciente";
+                  
+                  // Campo 6 es 'Ultima Compra', extraemos Timestamp
+                  const timestampValue = c[6] ? parseFloat(c[6].v || c[6].f) : 0;
+                  if (!isNaN(timestampValue) && timestampValue > 0) {
+                      const fechaOriginal = new Date(timestampValue);
+                      const fechaHoy = new Date();
+                      // Normalizar ambos a las 00:00:00 para medir días exactos
+                      const startHoy = new Date(fechaHoy.getFullYear(), fechaHoy.getMonth(), fechaHoy.getDate());
+                      const startCom = new Date(fechaOriginal.getFullYear(), fechaOriginal.getMonth(), fechaOriginal.getDate());
+                      
+                      const diffTime = startHoy.getTime() - startCom.getTime();
+                      recenciaCalculada = Math.floor(Math.abs(diffTime) / (1000 * 60 * 60 * 24));
+                      fechaLabel = `${fechaOriginal.getDate()}/${fechaOriginal.getMonth()+1}/${fechaOriginal.getFullYear()}`;
+                  }
+
+                  // Limpiar valor
+                  let valorBruto = c[11] ? c[11].v : 0;
+                  if (typeof valorBruto === 'string') valorBruto = valorBruto.replace(/[\$\,\.]/g, ''); 
+                  
+                  return {
+                    id: index + 1,
+                    nombre: c[0] ? c[0].v : "Sin Nombre",
+                    edad: c[1] ? parseInt(c[1].v) : 30,
+                    ciudad: c[2] ? c[2].v : "No Configurada",
+                    frecuencia: c[5] ? parseInt(c[5].v) : 1,
+                    ultimaCompra: fechaLabel,
+                    recencia: recenciaCalculada,
+                    canal: c[7] ? c[7].v : "Web",
+                    tipo: c[8] ? c[8].v : "Molido",
+                    presentacion: c[9] ? c[9].v : "Caja",
+                    unidades: c[10] ? parseInt(c[10].v) : 1,
+                    valor: parseInt(valorBruto) || 0
+                  };
+                });
+
+                clientes.reverse();
+                actualizarDashboard();
+            } else {
+                lanzarDemo();
+            }
+         }
+      }
+   }
+};
+
+// Intento silencioso de bajar datos usando el inyector de Script nativo
+function descargarDatosSilencioso() {
+  const scriptJSONP = document.createElement("script");
+  scriptJSONP.src = "https://docs.google.com/spreadsheets/d/1HH04AtdkOxacbFX8aH5AUS_Ah8y26BtvliN1B_IT-LA/gviz/tq?tqx=out:json";
+  scriptJSONP.onerror = lanzarDemo;
+  document.body.appendChild(scriptJSONP);
+}
+
+function lanzarDemo() {
+    clientes = [
+      {id:1,nombre:"Ana Maria (Fallo Red)",edad:32,ciudad:"Cali",frecuencia:1,ultimaCompra:"Hoy",recencia:0,canal:"Venta directa",tipo:"Molido",presentacion:"Libra",unidades:1,valor:40000},
+      {id:2,nombre:"Andres Ruiz (Fallo Red)",edad:35,ciudad:"Pereira",frecuencia:1,ultimaCompra:"Ayer",recencia:2,canal:"WhatsApp",tipo:"Molido",presentacion:"Media Libra",unidades:1,valor:25000}
+    ];
+    actualizarDashboard();
+}
+
+// Actualización en VIVO vía Hubspot form (sin recargar página)
+window.addEventListener("message", function(event) {
+  if (event.data.type === 'hsFormCallback' && (event.data.eventName === 'onFormSubmit' || event.data.eventName === 'onFormSubmitted')) {
+    // onFormSubmit trae datos en event.data.data. onFormSubmitted los puede omitir o traer distinto
+    const rawData = event.data.data || [];
+    const doc = {};
+    if(Array.isArray(rawData)) {
+        rawData.forEach(f => doc[f.name] = f.value);
+    }
+    
+    let fechaSubmit = new Date();
+    const nuevoClienteLocal = {
+      id: clientes.length + 1,
+      nombre: doc["firstname"] || doc["nombre"] || "Cliente Nuevo Live",
+      edad: parseInt(doc["edad"] || "30", 10),
+      ciudad: doc["city"] || doc["ciudad"] || "Pereira",
+      frecuencia: 1, 
+      ultimaCompra: `${fechaSubmit.getDate()}/${fechaSubmit.getMonth()+1}/${fechaSubmit.getFullYear()}`,
+      recencia: 0,
+      canal: doc["canal"] || "HubSpot Live",
+      tipo: doc["tipo_cafe"] || doc["tipo"] || "Molido",
+      presentacion: doc["presentacion"] || "Libra",
+      unidades: parseInt(doc["unidades"] || "1", 10),
+      valor: parseInt(doc["valor"] || doc["monto"] || "40000", 10)
+    };
+
+    clientes.unshift(nuevoClienteLocal); 
+    
+    setTimeout(() => {
+        const modal = document.getElementById('hubspot-modal');
+        if(modal) modal.classList.add('hidden');
+    }, 1500);
+
+    actualizarDashboard();
+  }
+});
+
+// ============================================================
+// FUNCIONES DE DIBUJADO DE DASHBOARD
+// ============================================================
+function formatCOP(n){ return '$'+(n||0).toLocaleString('es-CO'); }
+
+function actualizarDashboard() {
+  if(clientes.length === 0) return;
+
+  const totalClientes = clientes.length;
+  const ingresosTotales = clientes.reduce((s,c)=>s+c.valor,0);
+  const totalFrecuencia = clientes.reduce((s,c)=>s+c.frecuencia,0);
+  const ticketPromedio = Math.round(ingresosTotales / totalFrecuencia);
+  const frecuenciaPromedio = (totalFrecuencia / totalClientes).toFixed(1);
+  const recenciaPromedio = Math.round(clientes.reduce((s,c)=>s+c.recencia,0) / totalClientes);
+
+  const enRiesgo = clientes.filter(c=>c.recencia>30).length;
+  const puntoIdeal = clientes.filter(c=>c.recencia<15 && c.frecuencia>2).length;
+  const unicaCompra = clientes.filter(c=>c.frecuencia===1).length;
+  const unicaCompraPct = Math.round((unicaCompra/totalClientes)*100);
+
+  document.getElementById('kpi-clientes').textContent = totalClientes;
+  document.getElementById('kpi-ingresos').textContent = formatCOP(ingresosTotales);
+  document.getElementById('kpi-ticket').textContent = formatCOP(ticketPromedio);
+  document.getElementById('kpi-frecuencia').textContent = frecuenciaPromedio;
+  document.getElementById('kpi-recencia').textContent = recenciaPromedio;
+  document.getElementById('kpi-riesgo').textContent = enRiesgo;
+  document.getElementById('kpi-ideal').textContent = puntoIdeal;
+  document.getElementById('kpi-unica').textContent = unicaCompra;
+  document.getElementById('kpi-unica-pct').textContent = `(${unicaCompraPct}% del total)`;
+
+  const hoyStr = new Date().toLocaleDateString('es-CO', {month:'long', year:'numeric'});
+  document.getElementById('fecha-header').textContent = 'Live CRM: ' + hoyStr;
+
+  const colores = ['bg-primary-fixed text-[#17301e]','bg-tertiary-fixed text-[#573c00]','bg-secondary-fixed text-[#3e0400]', 'bg-[#e5e4ce] text-[#17301e]'];
+  const tablaTop = document.getElementById('tabla-top');
+  tablaTop.innerHTML = '';
+  
+  clientes.forEach((c,i)=>{
+    const arrNombre = c.nombre.split(' ');
+    const nA = arrNombre[0] ? arrNombre[0][0] : '?';
+    const nB = arrNombre[1] ? arrNombre[1][0] : '';
+    const iniciales = (nA+nB).toUpperCase();
+    const diasTexto = c.recencia === 0 ? 'Hoy' : c.recencia === 1 ? 'Hace 1 día' : `Hace ${c.recencia} días`;
+    const cColor = colores[i%colores.length];
+    
+    tablaTop.innerHTML += `
+      <tr class="hover:bg-surface-container-low transition-colors group">
+        <td class="py-4 flex items-center gap-3">
+          <div class="min-w-8 h-8 rounded-full ${cColor} flex items-center justify-center text-[10px] font-bold">${iniciales}</div>
+          <span class="font-bold text-primary truncate max-w-[130px]" title="${c.nombre}">${c.nombre}</span>
+        </td>
+        <td class="py-4">${c.frecuencia} ${c.frecuencia===1?'compra':'compras'}</td>
+        <td class="py-4">${diasTexto}</td>
+        <td class="py-4 text-right font-bold text-primary">${formatCOP(c.valor)}</td>
+      </tr>`;
+  });
+
+  const canalCount = {};
+  clientes.forEach(c=>{ canalCount[c.canal]=(canalCount[c.canal]||0)+1; });
+
+  const tipoData = {};
+  clientes.forEach(c=>{
+    if(!tipoData[c.tipo]) tipoData[c.tipo]={suma:0,frec:0};
+    tipoData[c.tipo].suma += c.valor;
+    tipoData[c.tipo].frec += c.frecuencia;
+  });
+  
+  const labelChannels = Object.keys(canalCount);
+  if (labelChannels.length > 0) {
+    if(chartCanalInstance) {
+      chartCanalInstance.data.labels = labelChannels;
+      chartCanalInstance.data.datasets[0].data = Object.values(canalCount);
+      chartCanalInstance.update();
+    } else {
+      const ctxCanal = document.getElementById('chartCanal').getContext('2d');
+      chartCanalInstance = new Chart(ctxCanal, {
+        type: 'bar',
+        data: {
+          labels: labelChannels,
+          datasets: [{ label: 'Clientes', data: Object.values(canalCount), backgroundColor: ['#17301e','#f5bd55', '#3e0400', '#737972'], borderRadius: 6 }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } },
+          scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } } }
+        }
+      });
+    }
+  }
+
+  const tkLabels = Object.keys(tipoData);
+  if(tkLabels.length > 0) {
+    const tkData = tkLabels.map(t => Math.round(tipoData[t].suma / tipoData[t].frec));
+    if(chartTicketInstance) {
+      chartTicketInstance.data.labels = tkLabels;
+      chartTicketInstance.data.datasets[0].data = tkData;
+      chartTicketInstance.update();
+    } else {
+      const ctxTicket = document.getElementById('chartTicket').getContext('2d');
+      chartTicketInstance = new Chart(ctxTicket, {
+        type: 'bar',
+        data: { labels: tkLabels, datasets: [{ label: 'Ticket Promedio', data: tkData, backgroundColor: ['#b5270e','#17301e', '#f5bd55'], borderRadius: 6 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { callback: (v) => '$'+v.toLocaleString('es-CO') } } } }
+      });
+    }
+  }
+
+  const activosData = clientes.filter(c=>c.recencia<=30).map(c=>({ x: c.recencia, y: c.frecuencia, r: Math.min(6 + (c.valor/10000), 20), nombre: c.nombre, valor: c.valor }));
+  const riesgoData = clientes.filter(c=>c.recencia>30).map(c=>({ x: c.recencia, y: c.frecuencia, r: Math.min(6 + (c.valor/10000), 20), nombre: c.nombre, valor: c.valor }));
+
+  if(chartCicloInstance) {
+    chartCicloInstance.data.datasets[0].data = activosData;
+    chartCicloInstance.data.datasets[1].data = riesgoData;
+    chartCicloInstance.update();
+  } else {
+    const ctxCiclo = document.getElementById('chartCiclo').getContext('2d');
+    chartCicloInstance = new Chart(ctxCiclo, {
+      type: 'bubble',
+      data: { datasets: [
+          { label: 'Activo', data: activosData, backgroundColor: 'rgba(22,163,74,0.55)', borderColor: 'rgba(22,163,74,0.9)' },
+          { label: 'En Riesgo', data: riesgoData, backgroundColor: 'rgba(186,26,26,0.5)', borderColor: 'rgba(186,26,26,0.85)' }
+      ] },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: function(ctx) { const d = ctx.raw; return [`Cliente: ${d.nombre}`, `Frecuencia: ${d.y} compras`, `Recencia: ${d.x} días`, `Total: $${(d.valor||0).toLocaleString('es-CO')}`]; } } } }, scales: { x: { title: { display: true, text: 'Recencia (días)' } }, y: { title: { display: true, text: 'Frecuencia' }, beginAtZero: true } } }
+    });
+  }
+
+  const ciudadCount = {};
+  clientes.forEach(c=>{ 
+    const normCiudad = c.ciudad && c.ciudad.trim()!=="" ? c.ciudad.trim() : "No Disponible";
+    ciudadCount[normCiudad]=(ciudadCount[normCiudad]||0)+1; 
+  });
+  
+  const detalleCiudad = document.getElementById('detalle-ciudad');
+  detalleCiudad.innerHTML = '';
+  const ciudadesOrdenadas = Object.entries(ciudadCount).sort((a,b)=>b[1]-a[1]);
+  const barColors = ['bg-secondary','bg-primary', 'bg-tertiary', 'bg-on-surface-variant'];
+  
+  ciudadesOrdenadas.forEach(([ciudad, count], i) => {
+    const pct = Math.round((count/totalClientes)*100);
+    detalleCiudad.innerHTML += `
+      <div>
+        <div class="flex justify-between items-center mb-2">
+          <span class="font-bold text-primary truncate max-w-[140px]" title="${ciudad}">${ciudad}</span>
+          <span class="text-xs bg-primary-fixed text-primary px-2 py-1 rounded">${pct}%</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="h-2 flex-1 bg-outline-variant/10 rounded-full">
+            <div class="h-full ${barColors[i%barColors.length]} rounded-full transition-all duration-1000" style="width:${pct}%;"></div>
+          </div>
+          <span class="font-bold text-sm">${count}</span>
+        </div>
+      </div>`;
+  });
+
+  if (mapInstance) {
+    circleLayers.forEach(layer => mapInstance.removeLayer(layer));
+    circleLayers = [];
+
+    Object.entries(ciudadCount).forEach(([ciudad, count], idx) => {
+      const fallbackLats = [4.1, 5.1, 4.2, 4.6, 6.2, 10.9];
+      const fallbackLngs = [-75.9, -74.1, -76.5, -74.0, -75.5, -74.7];
+      const coords = ciudadesCoords[ciudad] || [fallbackLats[idx%6] + (Math.random()*0.1), fallbackLngs[idx%6] + (Math.random()*0.1)];
+      
+      const radius = Math.min(20 + count * 5, 50);
+
+      const fillColor = idx === 0 ? '#17301e' : (idx === 1 ? '#b5270e' : '#f5bd55');
+      const circle = L.circleMarker(coords, {
+        radius: radius, fillColor: fillColor, color: '#fcfae4', weight: 2, opacity: 1, fillOpacity: 0.75,
+      }).addTo(mapInstance);
+
+      const markerParams = L.divIcon({
+        html: `<div style="color:white;font-weight:800;font-size:13px;font-family:Manrope;text-align:center;line-height:1;margin-top:-6px;">${count}</div>`,
+        className: '', iconAnchor: [0, 0]
+      });
+      const marker = L.marker(coords, { icon: markerParams }).addTo(mapInstance);
+
+      const nCiudad = clientes.filter(c => {
+          let nc = c.ciudad && c.ciudad.trim() !== "" ? c.ciudad.trim() : "No Configurada";
+          return nc === ciudad;
+      }).map(c => c.nombre).join(', ');
+      
+      const tooltipHtml = `<b>${ciudad} (${count})</b><br><span style="font-size:10px">${nCiudad||''}</span>`;
+      circle.bindTooltip(tooltipHtml, { direction: 'top' });
+      marker.bindTooltip(tooltipHtml, { direction: 'top' });
+
+      circleLayers.push(circle);
+      circleLayers.push(marker);
+    });
+  }
+
+  // Insights Dinámicos
+  let mejorCanal = ""; let maxC = 0;
+  for(let c in canalCount) { if(canalCount[c]>maxC){ maxC=canalCount[c]; mejorCanal=c; } }
+  let mejorP = ""; let maxP = 0;
+  for(let t in tipoData) { if(tipoData[t].suma>maxP){ maxP=tipoData[t].suma; mejorP=t; } }
+  
+  const iMes = document.getElementById('insight-mes');
+  if(iMes) iMes.innerHTML = `Tu motor principal de ingresos proviene del canal <b>${mejorCanal}</b>, impulsado fuertemente por ventas de <b>${mejorP}</b>.`;
+  
+  const iExp = document.getElementById('insight-expansion');
+  if(iExp) {
+      if(ciudadesOrdenadas.length > 1) {
+          iExp.innerHTML = `<b>${ciudadesOrdenadas[0][0]}</b> lidera tu consumo. Un plan comercial regional hacia <b>${ciudadesOrdenadas[1][0]}</b> podría asegurar tu dominancia.`;
+      } else if (ciudadesOrdenadas.length === 1) {
+          iExp.innerHTML = `Excelente penetración en <b>${ciudadesOrdenadas[0][0]}</b>. Considera expandirte a regiones vecinas pronto.`;
+      } else {
+          iExp.innerHTML = `Información insuficiente para determinar expansión.`;
+      }
+  }
+}
+
+// ============================================================
+// INICIALIZACIÓN (Sin bloqueos)
+// ============================================================
+function initApp() {
+  if(!mapInstance){ 
+    mapInstance = L.map('map', { zoomControl: true }).setView([4.1, -75.9], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors', maxZoom: 18
+    }).addTo(mapInstance);
+  }
+  
+  actualizarDashboard();
+  setTimeout(() => mapInstance.invalidateSize(), 500);
+  
+  // Intenta jalar silenciosamente en el fondo si sirve el excel publico
+  descargarDatosSilencioso();
+}
+
+window.onload = () => {
+    initApp(); 
+};
+
+</script>
+</body>
+</html>
