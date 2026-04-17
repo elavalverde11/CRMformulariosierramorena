@@ -104,7 +104,7 @@
 <!-- SideNavBar -->
 <aside class="fixed left-0 top-0 h-full flex flex-col py-8 bg-[#f6f5de] text-[#17301e] font-sans text-sm uppercase tracking-widest w-64 border-r-0 z-50">
   <div class="px-6 mb-10 flex items-center gap-3">
-    <img alt="Sierra Morena Logo" class="w-10 h-10 object-contain" src="logo.png"/>
+    <img alt="Sierra Morena Logo" class="w-10 h-10 object-contain" src="logo.jpeg"/>
     <div class="flex flex-col">
       <span class="font-serif text-xl text-[#17301e] normal-case tracking-normal">Sierra Morena</span>
       <span class="text-[10px] opacity-60">Premium CRM</span>
@@ -374,8 +374,16 @@
     <p class="text-sm text-on-surface-variant mb-6">Complete la información en el CRM a través del siguiente formulario oficial.</p>
     
     <!-- Contenedor del Formulario HubSpot -->
-    <script src="https://js.hsforms.net/forms/embed/51270653.js" defer></script>
-    <div class="hs-form-frame" data-region="na1" data-form-id="5799b8d7-f78a-44f3-98c9-18f09574f818" data-portal-id="51270653"></div>
+    <script charset="utf-8" type="text/javascript" src="https://js.hsforms.net/forms/embed/v2.js"></script>
+    <div id="hubspot-form-container"></div>
+    <script>
+      hbspt.forms.create({
+        region: "na1",
+        portalId: "51270653",
+        formId: "5799b8d7-f78a-44f3-98c9-18f09574f818",
+        target: "#hubspot-form-container"
+      });
+    </script>
   </div>
 </div>
 
@@ -457,7 +465,9 @@ window.google = {
 // Intento silencioso de bajar datos usando el inyector de Script nativo
 function descargarDatosSilencioso() {
   const scriptJSONP = document.createElement("script");
-  scriptJSONP.src = "https://docs.google.com/spreadsheets/d/1HH04AtdkOxacbFX8aH5AUS_Ah8y26BtvliN1B_IT-LA/gviz/tq?tqx=out:json";
+  // Se agrega un timestamp a la URL para evitar que GitHub Pages y el navegador guarden el caché de Google Sheets
+  const cacheBuster = new Date().getTime();
+  scriptJSONP.src = "https://docs.google.com/spreadsheets/d/1HH04AtdkOxacbFX8aH5AUS_Ah8y26BtvliN1B_IT-LA/gviz/tq?tqx=out:json&t=" + cacheBuster;
   scriptJSONP.onerror = lanzarDemo;
   document.body.appendChild(scriptJSONP);
 }
